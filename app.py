@@ -5,9 +5,28 @@ import plotly.graph_objects as go
 from streamlit_option_menu import option_menu
 
 # --- Auth helpers (for Google Sheets / user store) ---
-from google.oauth2 import service_account
 import gspread
-import hashlib
+from google.oauth2.service_account import Credentials
+import streamlit as st
+
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets.readonly",
+    "https://www.googleapis.com/auth/drive.readonly",
+]
+
+creds = Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"],
+    scopes=SCOPES,
+)
+gc = gspread.authorize(creds)
+
+# Use the ID we put in secrets
+sheet_id = st.secrets["app_config"]["users_sheet_id"]
+sh = gc.open_by_key(sheet_id)
+
+# Make sure the tab name matches exactly (rename the first tab to 'users' if needed)
+ws = sh.worksheet("users")   # or use sh.get_worksheet(0) for the first tab
+records = ws.get_all_records()
 
 # Guard: make sure the secret exists before trying to use it
 if "gcp_service_account" in st.secrets:
