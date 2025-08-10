@@ -5,83 +5,46 @@ import plotly.graph_objects as go
 from streamlit_option_menu import option_menu
 
 # --- Auth helpers (for Google Sheets / user store) ---
+import hashlib
 import gspread
 from google.oauth2.service_account import Credentials
-import streamlit as st
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets.readonly",
     "https://www.googleapis.com/auth/drive.readonly",
 ]
 
-creds = Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"],
-    scopes=SCOPES,
-)
-gc = gspread.authorize(creds)
-
-# Use the ID we put in secrets
-sheet_id = st.secrets["app_config"]["users_sheet_id"]
-sh = gc.open_by_key(sheet_id)
-
-# Make sure the tab name matches exactly (rename the first tab to 'users' if needed)
-ws = sh.worksheet("users")   # or use sh.get_worksheet(0) for the first tab
-records = ws.get_all_records()
-
-# Guard: make sure the secret exists before trying to use it
-if "gcp_service_account" in st.secrets:
-    creds = service_account.Credentials.from_service_account_info(
+try:
+    creds = Credentials.from_service_account_info(
         st.secrets["gcp_service_account"],
-        scopes=[
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive",
-        ],
+        scopes=SCOPES,
     )
-    gc = gspread.authorize(creds)  # Use `gc` later to open your sheet
-else:
-    st.warning("Missing [gcp_service_account] in Secrets. Google auth features are disabled for now.")
+    gc = gspread.authorize(creds)
 
-# ---------- Simple auth helpers using Google Sheet "users" ----------
-import time
+    sheet_id = st.secrets["app_config"]["users_sheet_id"]
+    sh = gc.open_by_key(sheet_id)
 
-def get_users_ws():
-    """Open the 'users' worksheet in the configured spreadsheet."""
-    sid = st.secrets["app_config"]["users_sheet_id"]
-    sh = gc.open_by_key(sid)
+    # Use tab name or first worksheet
     try:
-        return sh.worksheet("users")
+        ws = sh.worksheet("users")
     except gspread.WorksheetNotFound:
-        st.stop()
+        ws = sh.get_worksheet(0)
 
-def hash_pwd(pwd: str) -> str:
-    return hashlib.sha256(pwd.encode("utf-8")).hexdigest()
+    records = ws.get_all_records()
 
-def validate_user(email: str, username: str, pwd: str) -> bool:
-    ws = get_users_ws()
-    rows = ws.get_all_records()
-    h = hash_pwd(pwd)
-    for r in rows:
-        if (
-            str(r.get("email", "")).strip().lower() == email.strip().lower()
-            and str(r.get("username", "")).strip() == username.strip()
-            and str(r.get("is_active", "TRUE")).strip().upper() in ("TRUE", "1", "YES")
-            and str(r.get("pwd_hash", "")).strip() == h
-        ):
-            return True
-    return False
+except KeyError as e:
+    st.error(f"Missing secret key: {e}. Add it in Streamlit Cloud → Edit secrets.")
+    st.stop()
+except gspread.exceptions.APIError as e:
+    st.error(f"Google API error: {e}")
+    st.stop()
+except PermissionError:
+    sa_email = st.secrets["gcp_service_account"]["client_email"]
+    st.error(
+        f"Permission denied opening the Sheet. Share it with **{sa_email}** as Editor and reboot."
+    )
+    st.stop()
 
-def ensure_first_user_password(email: str, username: str, plain_pwd: str):
-    """
-    Convenience helper: if your row has empty pwd_hash, set it once.
-    Call this locally one time to seed your own password, then remove/comment it.
-    """
-    ws = get_users_ws()
-    data = ws.get_all_records(numeric_value="RAW")
-    for idx, r in enumerate(data, start=2):  # header is row 1
-        if str(r.get("email","")).lower()==email.lower() and r.get("username","")==username:
-            if not r.get("pwd_hash"):
-                ws.update_cell(idx, 3, hash_pwd(plain_pwd))  # col C = pwd_hash
-            break
 
 # our helpers (already written earlier)
 from data import load_all          # uses your 01.xlsx + optional 02_budget.xlsx and maps account_group correctly
