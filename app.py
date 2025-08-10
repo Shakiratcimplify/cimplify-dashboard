@@ -5,9 +5,9 @@ import plotly.graph_objects as go
 from streamlit_option_menu import option_menu
 
 # our helpers (already written earlier)
-from lib.data import load_all          # uses your 01.xlsx + optional 02_budget.xlsx and maps account_group correctly
-from lib.metrics import kpis, monthly_pnl
-from lib.charts import kpi_card_md, donut, line_two, waterfall_from_monthly, inject_watermark
+from data import load_all
+from metrics import kpis, monthly_pnl
+from charts import kpi_card_md, donut, line_two, waterfall_from_monthly, inject_watermark
 
 # --------------------
 # Page & watermark
