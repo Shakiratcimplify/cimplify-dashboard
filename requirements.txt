@@ -8,3 +8,8 @@ streamlit-option-menu
 Pillow
 matplotlib
 streamlit-authenticator
+nginx
+CopyEdit
+gspread
+google-auth
+bcrypt
