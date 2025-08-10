@@ -22,6 +22,47 @@ if "gcp_service_account" in st.secrets:
 else:
     st.warning("Missing [gcp_service_account] in Secrets. Google auth features are disabled for now.")
 
+# ---------- Simple auth helpers using Google Sheet "users" ----------
+import time
+
+def get_users_ws():
+    """Open the 'users' worksheet in the configured spreadsheet."""
+    sid = st.secrets["app_config"]["users_sheet_id"]
+    sh = gc.open_by_key(sid)
+    try:
+        return sh.worksheet("users")
+    except gspread.WorksheetNotFound:
+        st.stop()
+
+def hash_pwd(pwd: str) -> str:
+    return hashlib.sha256(pwd.encode("utf-8")).hexdigest()
+
+def validate_user(email: str, username: str, pwd: str) -> bool:
+    ws = get_users_ws()
+    rows = ws.get_all_records()
+    h = hash_pwd(pwd)
+    for r in rows:
+        if (
+            str(r.get("email", "")).strip().lower() == email.strip().lower()
+            and str(r.get("username", "")).strip() == username.strip()
+            and str(r.get("is_active", "TRUE")).strip().upper() in ("TRUE", "1", "YES")
+            and str(r.get("pwd_hash", "")).strip() == h
+        ):
+            return True
+    return False
+
+def ensure_first_user_password(email: str, username: str, plain_pwd: str):
+    """
+    Convenience helper: if your row has empty pwd_hash, set it once.
+    Call this locally one time to seed your own password, then remove/comment it.
+    """
+    ws = get_users_ws()
+    data = ws.get_all_records(numeric_value="RAW")
+    for idx, r in enumerate(data, start=2):  # header is row 1
+        if str(r.get("email","")).lower()==email.lower() and r.get("username","")==username:
+            if not r.get("pwd_hash"):
+                ws.update_cell(idx, 3, hash_pwd(plain_pwd))  # col C = pwd_hash
+            break
 
 # our helpers (already written earlier)
 from data import load_all          # uses your 01.xlsx + optional 02_budget.xlsx and maps account_group correctly
