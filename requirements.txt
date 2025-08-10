@@ -7,8 +7,3 @@ XlsxWriter
 streamlit-option-menu
 Pillow
 streamlit-authenticator
-nginx
-CopyEdit
-gspread
-google-auth
-bcrypt
