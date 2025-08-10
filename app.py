@@ -75,6 +75,41 @@ from charts import kpi_card_md, donut, line_two, waterfall_from_monthly, inject_
 # Page & watermark
 # --------------------
 st.set_page_config(page_title="Financial Performance", layout="wide")
+
+# ---------- Login wall ----------
+ALLOW_DOMAIN = "cimplify.ng"  # restrict to company emails
+
+if "auth_ok" not in st.session_state:
+    st.session_state.auth_ok = False
+
+if not st.session_state.auth_ok:
+    st.title("Sign in")
+    with st.form("login_form", clear_on_submit=False):
+        email_in = st.text_input("Company email")
+        user_in = st.text_input("Username")
+        pwd_in  = st.text_input("Password", type="password")
+        submitted = st.form_submit_button("Sign in")
+
+    if submitted:
+        # domain check first
+        if not email_in.lower().endswith(f"@{ALLOW_DOMAIN}"):
+            st.error(f"Only @{ALLOW_DOMAIN} emails are allowed.")
+            st.stop()
+
+        try:
+            if "gcp_service_account" in st.secrets and validate_user(email_in, user_in, pwd_in):
+                st.session_state.auth_ok = True
+                st.success("Welcome!")
+                time.sleep(0.3)
+                st.experimental_rerun()
+            else:
+                st.error("Invalid credentials or configuration.")
+        except Exception as e:
+            st.error(f"Auth error: {e}")
+            st.stop()
+
+    st.stop()  # prevent the rest of the app from rendering for unauthenticated users
+
 # Widen the main content container a bit
 st.markdown("""
 <style>
@@ -242,6 +277,11 @@ with st.sidebar:
         orientation="vertical",
     )
 
+with st.sidebar:
+    if st.session_state.get("auth_ok"):
+        if st.button("Log out"):
+            st.session_state.auth_ok = False
+            st.experimental_rerun()
 
 # --------------------
 # Global filters
