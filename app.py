@@ -10,6 +10,40 @@ from metrics import kpis, monthly_pnl
 from charts import kpi_card_md, donut, line_two, waterfall_from_monthly, inject_watermark
 
 # --------------------
+# LOGIN AUTHENTICATION
+# --------------------
+
+# Load credentials from Streamlit secrets
+creds = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"],
+    scopes=["https://www.googleapis.com/auth/spreadsheets"]
+)
+client = gspread.authorize(creds)
+SHEET_NAME = "your-google-sheet-name"  # <-- replace with your sheet name
+sheet = client.open(SHEET_NAME).worksheet("users")
+
+def hash_pwd(pwd):
+    return hashlib.sha256(pwd.encode()).hexdigest()
+
+if "logged_in" not in st.session_state:
+    st.session_state["logged_in"] = False
+
+if not st.session_state["logged_in"]:
+    st.title("🔐 Login to Dashboard")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        users = sheet.get_all_records()
+        for user in users:
+            if user["username"] == username and user["pwd_hash"] == hash_pwd(password):
+                st.session_state["logged_in"] = True
+                st.experimental_rerun()
+        else:
+            st.error("Invalid username or password")
+    st.stop()  # <-- stops the rest of the dashboard from loading
+
+
+# --------------------
 # Page & watermark
 # --------------------
 st.set_page_config(page_title="Financial Performance", layout="wide")
