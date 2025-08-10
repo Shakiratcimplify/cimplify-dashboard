@@ -95,6 +95,8 @@ from charts import kpi_card_md, donut, line_two, waterfall_from_monthly, inject_
 # --------------------
 st.set_page_config(page_title="Financial Performance", layout="wide")
 
+st.info(f"Service account email: {st.secrets['gcp_service_account']['client_email']}")
+
 # ---------- Login wall ----------
 ALLOW_DOMAIN = "cimplify.ng"  # restrict to company emails
 
