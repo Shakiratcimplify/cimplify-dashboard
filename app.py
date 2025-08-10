@@ -4,47 +4,6 @@ import streamlit as st
 import plotly.graph_objects as go
 from streamlit_option_menu import option_menu
 
-# --- Auth helpers (for Google Sheets / user store) ---
-import hashlib
-import gspread
-from google.oauth2.service_account import Credentials
-
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets.readonly",
-    "https://www.googleapis.com/auth/drive.readonly",
-]
-
-try:
-    creds = Credentials.from_service_account_info(
-        st.secrets["gcp_service_account"],
-        scopes=SCOPES,
-    )
-    gc = gspread.authorize(creds)
-
-    sheet_id = st.secrets["app_config"]["users_sheet_id"]
-    sh = gc.open_by_key(sheet_id)
-
-    # Use tab name or first worksheet
-    try:
-        ws = sh.worksheet("users")
-    except gspread.WorksheetNotFound:
-        ws = sh.get_worksheet(0)
-
-    records = ws.get_all_records()
-
-except KeyError as e:
-    st.error(f"Missing secret key: {e}. Add it in Streamlit Cloud → Edit secrets.")
-    st.stop()
-except gspread.exceptions.APIError as e:
-    st.error(f"Google API error: {e}")
-    st.stop()
-except PermissionError:
-    sa_email = st.secrets["gcp_service_account"]["client_email"]
-    st.error(
-        f"Permission denied opening the Sheet. Share it with **{sa_email}** as Editor and reboot."
-    )
-    st.stop()
-
 
 # our helpers (already written earlier)
 from data import load_all          # uses your 01.xlsx + optional 02_budget.xlsx and maps account_group correctly
