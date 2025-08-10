@@ -1,10 +1,8 @@
 streamlit
 pandas
-numpy
 plotly
-openpyxl
-XlsxWriter
 streamlit-option-menu
-Pillow
+xlsxwriter
 matplotlib
-streamlit-authenticator
+gspread
+google-auth
