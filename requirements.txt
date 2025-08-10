@@ -6,4 +6,5 @@ openpyxl
 XlsxWriter
 streamlit-option-menu
 Pillow
+matplotlib
 streamlit-authenticator
