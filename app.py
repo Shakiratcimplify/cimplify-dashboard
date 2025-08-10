@@ -20,7 +20,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-inject_watermark(st, "assets/logo.png")
+inject_watermark(st, "logo.png")
 
 # --------------------
 # Load data (DO NOT edit your files)
