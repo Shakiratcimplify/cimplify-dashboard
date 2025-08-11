@@ -885,7 +885,7 @@ elif page == "Expenses":
 # STATEMENT OF PROFIT & LOSS (from 01.xlsx line items)
 # =========================================================================
 else:
-    st.title("Statement of Profit & Loss — ₦")
+    st.title("Statement of Profit & Loss ")
 
     # Ensure period columns exist
     if "year" not in DF.columns and "date" in DF.columns:
