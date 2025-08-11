@@ -322,7 +322,7 @@ if page == "Overview":
     st.plotly_chart(fig_rev_exp, use_container_width=True)
 
     # --- Expenses Breakdown (Monthly) ---
-    st.subheader("💸 Expenses Breakdown (Monthly)")
+    st.subheader(" Expenses Breakdown (Monthly)")
     exp_month = (
         DF[DF["account_group"].isin(["COGS", "OPEX"])]
         .groupby(["year", "month", "account_group"], as_index=False)["signed_amount"].sum()
@@ -386,7 +386,7 @@ if page == "Overview":
             )
             st.plotly_chart(fig_top5, use_container_width=True)
 
-            st.caption(f"🎯 Top 5 customers = **{top5_share:.1f}%** of revenue. "
+            st.caption(f" Top 5 customers = **{top5_share:.1f}%** of revenue. "
                        f"Others = ₦{others:,.0f}. "
                        f"If this % is high, revenue is concentrated (risk).")
 
@@ -445,7 +445,7 @@ if page == "Overview":
                     yaxis_title="Vendor"
                 )
                 st.plotly_chart(fig_vendors, use_container_width=True)
-                st.caption("📑 Consider re‑bids or framework agreements for your top vendors.")
+                st.caption(" Consider re‑bids or framework agreements for your top vendors.")
             else:
                 st.info("No classification/vendor columns to break down expenses.")
 
