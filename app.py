@@ -185,11 +185,6 @@ with st.sidebar:
         orientation="vertical",
     )
 
-with st.sidebar:
-    if st.session_state.get("auth_ok"):
-        if st.button("Log out"):
-            st.session_state.auth_ok = False
-            st.experimental_rerun()
 
 # --------------------
 # Global filters
